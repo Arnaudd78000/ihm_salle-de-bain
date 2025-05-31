@@ -7,6 +7,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageTk
 from config import DEBUG
 import data_storage
 from datetime import datetime, timedelta
+import customtkinter as ctk
+from customtkinter import CTkImage
+
 #######
 ## à mettre partout
 #######
@@ -20,6 +23,10 @@ API_KEY = "eb226d2653ed00e8c8952db6777a471b"
 VILLE = "Versailles"
 LATITUDE = "48.8566"  # Exemple pour Paris
 LONGITUDE = "2.3522"
+
+# Initialiser la bibliothèque (recommandé)
+ctk.set_appearance_mode("dark")  # ou "light"
+ctk.set_default_color_theme("blue")  # ou "green", "dark-blue", etc.
 
 class IHM:
     def __init__(self, root):
@@ -48,13 +55,16 @@ class IHM:
         self.icon_6h = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/6h.png").subsample(1, 1)
         self.icon_12h = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/12h.png").subsample(1, 1)
         self.icon_21h = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/21h.png").subsample(1, 1)
-        self.icon_ble_on = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/ble_on.png").subsample(12, 12)
         self.icon_wifi_on = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/wifi_on.png").subsample(12, 12)
         self.icon_wifi_off = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/wifi_off.png").subsample(16, 16)
         #self.icon_bed = PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/bed.png").zoom(1, 1)
-        self.icon_boost=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/boost.png").subsample(3, 3)
-        self.icon_on=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/on.png").subsample(3, 3)
-        self.icon_off=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/off.png").subsample(3, 3)
+        # self.icon_boost=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/boost.png").subsample(3, 3)
+        # self.icon_on=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/on.png").subsample(3, 3)
+        #self.icon_off=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/off.png").subsample(3, 3)
+        icon_off_pil = Image.open("/home/pi/Desktop/RASADA/ihm_sdb/Img/mdi_off.png")
+        self.icon_off = CTkImage(light_image=icon_off_pil, size=(32, 32))  # ou autre taille
+        icon_on_pil = Image.open("/home/pi/Desktop/RASADA/ihm_sdb/Img/mdi_on.png")
+        self.icon_on = CTkImage(light_image=icon_on_pil, size=(32, 32))  # ou autre taille
         self.icon_plus=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/plus.png").subsample(4, 4)
         self.icon_moins=PhotoImage(file="/home/pi/Desktop/RASADA/ihm_sdb/Img/moins.png").subsample(4, 4)
         # Frame principale
@@ -88,10 +98,32 @@ class IHM:
 
         # textes et boutons dupliqués avec temp et reglage chauff chbre
         self.frame_moins_plus = tk.Frame(self.frame_heure, bg="black")
-        self.frame_moins_plus.grid(row=0, column=0, pady=5)        
-        self.label_icon_plus = tk.Button(self.frame_moins_plus, image=self.icon_plus, bg="grey")
-        self.label_icon_plus.grid(row=0, column=0, padx=5)
-        self.label_icon_moins = tk.Button(self.frame_moins_plus, image=self.icon_moins, bg="grey")
+        self.frame_moins_plus.grid(row=0, column=0, pady=5)  
+        self.label_icon_plus = ctk.CTkButton(
+            self.frame_moins_plus,
+            text="+",
+            text_color="black",         # texte en rouge
+            font=("Arial", 48, "bold") ,
+            fg_color="grey",          # fond du bouton
+            border_color="white",     # contour blanc
+            border_width=0,
+            corner_radius=10,         # arrondi
+            width=75,                 # largeur du bouton
+            height=65                 # hauteur du bouton
+        )
+        self.label_icon_moins = ctk.CTkButton(
+            self.frame_moins_plus,
+            text="-",
+            text_color="black",         # texte en rouge
+            font=("Arial", 48, "bold") ,
+            fg_color="grey",          # fond du bouton
+            border_color="white",     # contour blanc
+            border_width=0,
+            corner_radius=10,         # arrondi
+            width=75,                 # largeur du bouton
+            height=65                # hauteur du bouton
+        )
+        self.label_icon_plus.grid(row=0, column=0, padx=5)      
         self.label_icon_moins.grid(row=0, column=1, padx=15)   
 
         self.label_temp_cible_chbre = tk.Label(self.frame_heure, text="Target Temp = ", font=("Helvetica", 18), fg="gray", bg="black")
@@ -132,12 +164,57 @@ class IHM:
         self.label_icon_alerte.grid(row=0, column=2, padx=5)
 
         # Icones dupliquées avec OFF/ON/BOOST
-        self.label_icon_off = tk.Button(self.frame_icons, image=self.icon_off, bg="grey")
+        # self.label_icon_off = tk.Button(self.frame_icons, image=self.icon_off, bg="grey")
+        # self.label_icon_off.grid(row=0, column=0, padx=5)
+
+        self.label_icon_off = ctk.CTkButton(
+            master=self.frame_icons,
+            image=self.icon_off,
+            text="",
+            text_color="black",         # texte en rouge
+            font=("Arial", 17, "bold") ,
+            fg_color="grey",          # fond du bouton
+            border_color="white",     # contour blanc
+            border_width=4,
+            corner_radius=10,         # arrondi
+            width=75,                 # largeur du bouton
+            height=70                 # hauteur du bouton
+        )
         self.label_icon_off.grid(row=0, column=0, padx=5)
-        self.label_icon_on = tk.Button(self.frame_icons, image=self.icon_on, bg="grey")
+        self.label_icon_on = ctk.CTkButton(
+            master=self.frame_icons,
+            image=self.icon_on,
+            text="",
+            #compound="top",  # 👈 Place le texte sous l’image
+            # text="ON",
+            # text_color="green",         # texte en rouge
+            font=("Arial", 12, "bold") ,
+            fg_color="grey",          # fond du bouton
+            border_color="white",     # contour blanc
+            border_width=4,
+            corner_radius=10,         # arrondi
+            width=75,                 # largeur du bouton
+            height=70                 # hauteur du bouton
+        )
         self.label_icon_on.grid(row=0, column=1, padx=5)
-        self.label_icon_boost = tk.Button(self.frame_icons, image=self.icon_boost, bg="grey")
+        self.label_icon_boost = ctk.CTkButton(
+            self.frame_icons,
+            text="BOOST",
+            text_color="red",         # texte en rouge
+            font=("Arial", 17, "bold") ,
+            fg_color="grey",          # fond du bouton
+            border_color="white",     # contour blanc
+            border_width=4,
+            corner_radius=10,         # arrondi
+            width=75,                 # largeur du bouton
+            height=70                 # hauteur du bouton
+        )
         self.label_icon_boost.grid(row=0, column=2, padx=5)
+
+        #self.label_icon_on = tk.Button(self.frame_icons, image=self.icon_on, bg="grey")
+        # self.label_icon_on.grid(row=0, column=1, padx=5)
+        #self.label_icon_boost = tk.Button(self.frame_icons, image=self.icon_boost, bg="grey")
+        #self.label_icon_boost.grid(row=0, column=2, padx=5)
         self.label_icon_off.grid_remove()
         self.label_icon_on.grid_remove()
         self.label_icon_boost.grid_remove()
@@ -173,7 +250,7 @@ class IHM:
         self.text_temp_chbre=self.canvas_chbre.create_text(110, 20, text="19.5°C", font=("Helvetica", 18), fill="white")
         self.text_temp_cible_chbre=self.canvas_chbre.create_text(110, 45, text="18.5°C", font=("Helvetica", 14), fill="grey")
         self.icon_heat_chbre = self.canvas_chbre.create_image(110, 70, image=self.icon_radiator)
-        self.icon_wifi_off_chbre = self.canvas_chbre.create_image(50, 12, image=self.icon_wifi_off)
+        self.icon_wifi_chbre = self.canvas_chbre.create_image(50, 12, image=self.icon_wifi_off)
 
         image_path = "/home/pi/Desktop/RASADA/ihm_sdb/Img/bed.png"
         image = Image.open(image_path)  # Ouvre l’image avec PIL
@@ -301,17 +378,17 @@ class IHM:
 
     def refresh_icon_chauff(self):
         if globals.mode_chauff_chbre=="off":
-            self.label_icon_off.config(bg='grey')
-            self.label_icon_on.config(bg='#303030')
-            self.label_icon_boost.config(bg='#303030')
+            self.label_icon_off.configure(border_width=4)
+            self.label_icon_on.configure(border_width=0)
+            self.label_icon_boost.configure(border_width=0)
         elif globals.mode_chauff_chbre=="on":
-            self.label_icon_off.config(bg='#303030')
-            self.label_icon_on.config(bg='grey')
-            self.label_icon_boost.config(bg='#303030')            
+            self.label_icon_off.configure(border_width=0)
+            self.label_icon_on.configure(border_width=4)
+            self.label_icon_boost.configure(border_width=0)           
         else:
-            self.label_icon_off.config(bg='#303030')
-            self.label_icon_on.config(bg='#303030')
-            self.label_icon_boost.config(bg='grey')
+            self.label_icon_off.configure(border_width=0)
+            self.label_icon_on.configure(border_width=0)
+            self.label_icon_boost.configure(border_width=4)
         self.label_temp_cible_chbre.config(text=f"Cible = {globals.temp_cible_chbre}°C")
 
     ###############################################

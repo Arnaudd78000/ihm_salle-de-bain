@@ -3,7 +3,7 @@ import glob
 import time
 #import RPi.GPIO as GPIO
 from config import DEBUG
-from gpiozero import Button
+from gpiozero import Button # type: ignore
 import subprocess
 import requests
 import threading
@@ -119,12 +119,10 @@ class CAPTEURS:
             etat_ble["change"]=False
             if etat_ble["connecte"]==True:
                 print("ble connexion change to : connected")
-                self.app_ihm.canvas_chbre.delete(self.app_ihm.icon_wifi_off_chbre)
-                self.app_ihm.icon_ble_on_chbre = self.app_ihm.canvas_chbre.create_image(50, 12, image=self.app_ihm.icon_ble_on) 
+                self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.icon_wifi_chbre , image=self.app_ihm.icon_wifi_on)
             else:
                 print("ble connexion change to : disconnected")
-                self.app_ihm.canvas_chbre.delete(self.app_ihm.icon_ble_on_chbre)
-                self.app_ihm.icon_wifi_off_chbre = self.app_ihm.canvas_chbre.create_image(50, 12, image=self.app_ihm.icon_wifi_off) 
+                self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.icon_wifi_chbre , image=self.app_ihm.icon_wifi_off)
 
         # if etat_ble["rx"]==True:
         #     etat_ble["rx"]=False
@@ -177,7 +175,7 @@ class CAPTEURS:
         try:
             response = requests.post(f"{HA_URL}/api/states/input_text.msg_from_sdb", json=data, headers=HEADERS)
         except:
-            print(f"ERREUR: Impossible de contacter Home Assistant POUR CAPTEUR LUM : ({e})")
+            print(f"ERREUR: Impossible de contacter Home Assistant POUR CAPTEUR LUM ")
         #print(f"reponse:{response.status_code}")
 
     ###############################################

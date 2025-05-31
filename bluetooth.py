@@ -11,7 +11,7 @@ INACTIVITY_TIMEOUT = 80  # 20 minutes en secondes
 async def run_ble_client():
     while True:  # Boucle de reconnexion
         print("🔍 Recherche du PicoBLE...")
-        devices = await BleakScanner.discover()
+        devices = await BleakScanner.discover(timeout=10)
         pico = next((d for d in devices if "PicoBLE" in d.name), None)
 
         if not pico:
@@ -33,13 +33,13 @@ async def run_ble_client():
                 # sur rx messasge, appellera : handle_notification
                 await client.start_notify(TX_CHAR_UUID, handle_notification)
 
-                # async def monitor_inactivity():
-                #     while client.is_connected:
-                #         if time.time()-last_msg_time > INACTIVITY_TIMEOUT:
-                #             print("⏱️ Inactivité détectée. Déconnexion...")
-                #             await client.disconnect()
-                #             break
-                #         await asyncio.sleep(10)
+                async def monitor_inactivity():
+                    while client.is_connected:
+                        if time.time()-last_msg_time > INACTIVITY_TIMEOUT:
+                            print("⏱️ Inactivité détectée. Déconnexion...")
+                            await client.disconnect()
+                            break
+                        await asyncio.sleep(10)
 
                 async def send_loop():
                     while client.is_connected:
@@ -58,7 +58,7 @@ async def run_ble_client():
         except BleakError as e:
             print(f"❌ Erreur de connexion : {e}")
             print("🔁 Tentative de reconnexion dans 5 secondes...")
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
 
 # Démarrage de la boucle d'exécution
 asyncio.run(run_ble_client())
