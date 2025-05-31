@@ -15,6 +15,13 @@ from bleak import BleakScanner, BleakClient, BleakError
 import time
 from variable import etat_ble
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+
+# Charge les variables depuis .env
+load_dotenv()
+# Récupère le token
+my_token = os.getenv("HA_TOKEN")
 
 #######
 ## à mettre partout
@@ -105,7 +112,6 @@ async def run_ble_client(app_ihm):
                     # Adresse de ton serveur Home Assistant (remplace par la bonne IP et le bon port)
                     HA_URL = "http://192.168.1.10:8123/api/states/sensor.chauff_pico"
                     # Ton long-lived access token (genere dans ton profil Home Assistant)
-                    HA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhYWNlODg0YzVkZTc0MzExYmI4MjA0ZGU1OWJhMzQ2NiIsImlhdCI6MTcxOTY0Njg3MiwiZXhwIjoyMDM1MDA2ODcyfQ.VKcX3OgWZ8vwLMI2odUXMs9mi9IYOHsV7ldTbwtl44s"
 
                     # Donnees à envoyer
                     data_to_tx = {
@@ -123,7 +129,7 @@ async def run_ble_client(app_ihm):
 
                     # Envoi de la requete POST
                     headers = {
-                        "Authorization": f"Bearer {HA_TOKEN}",
+                        "Authorization": f"Bearer {my_token}",
                         "Content-Type": "application/json"
                     }
 

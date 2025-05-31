@@ -12,6 +12,13 @@ import data_storage
 from variable import etat_ble
 from datetime import datetime
 import globals
+from dotenv import load_dotenv
+
+# Charge les variables depuis .env
+load_dotenv()
+# Récupère le token
+my_token = os.getenv("HA_TOKEN")
+
 #######
 ## à mettre partout
 #######
@@ -159,7 +166,6 @@ class CAPTEURS:
         print(datetime.now().strftime("%H:%M") + "-TX: SdB->HA")
         # Configuration
         HA_URL = "http://192.168.1.10:8123"  # Remplace par l'URL de ton Home Assistant
-        HA_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhYWNlODg0YzVkZTc0MzExYmI4MjA0ZGU1OWJhMzQ2NiIsImlhdCI6MTcxOTY0Njg3MiwiZXhwIjoyMDM1MDA2ODcyfQ.VKcX3OgWZ8vwLMI2odUXMs9mi9IYOHsV7ldTbwtl44s"
 
         ctr+=1
         value=f"{temp_c:.1f}/{etat}/{ctr}"
@@ -168,7 +174,7 @@ class CAPTEURS:
             print(f"Data tx : {value}")
 
         # En-têtes de la requête
-        HEADERS = {  "Authorization": f"Bearer {HA_TOKEN}", "Content-Type": "application/json" }
+        HEADERS = {  "Authorization": f"Bearer {my_token}", "Content-Type": "application/json" }
         # Corps de la requête
         data = { "state": value }
         # Envoi de la requête à Home Assistant
