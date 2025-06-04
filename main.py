@@ -27,9 +27,9 @@ my_token = os.getenv("HA_TOKEN")
 ## à mettre partout
 #######
 # Redéfinir print partout
-import builtins
+#import builtins
 from logger import init_logger, log
-builtins.print = log
+#builtins.print = log
 
 
 
@@ -56,12 +56,12 @@ async def run_ble_client(app_ihm):
     global etat_ble
 
     while True:  # Boucle de reconnexion
-        print("🔍 Recherche du PicoBLE...")
+        log("🔍 Recherche du PicoBLE...", fonction="F3")
         devices = await BleakScanner.discover()
         pico = next((d for d in devices if "PicoBLE" in d.name), None)
 
         if not pico:
-            print("❌ Pico introuvable, réessaye dans 4 minutes...")
+            log("❌ Pico introuvable, réessaye dans 4 minutes...", fonction="F3")
             if etat_ble["connecte"]==True:
                 etat_ble["change"]=True
                 etat_ble["connecte"]=False
@@ -71,7 +71,7 @@ async def run_ble_client(app_ihm):
         try:
             async with BleakClient(pico) as client:
                 await asyncio.sleep(1)  # ← petite pause
-                print("✅ Connecté à", pico.name)
+                log("✅ Connecté à", pico.name, fonction="F3")
                 if etat_ble["connecte"]==False:
                     etat_ble["change"]=True
                     etat_ble["connecte"]=True
@@ -85,7 +85,7 @@ async def run_ble_client(app_ihm):
                     #save time
                     last_msg_time = time.time()
                     message=data.decode()
-                    print(datetime.now().strftime("%H:%M") + "-RXp: ble->Tx ChauffPico@HA")
+
                     # Décomposer la string pour obtenir les valeurs
                     valeurs = message.split(',')
 
@@ -137,22 +137,14 @@ async def run_ble_client(app_ihm):
                         # Envoi de la requête à Home Assistant
                         response = requests.post(HA_URL, json=data_to_tx, headers=headers)
                         if response.status_code==200:
-                            print(f"    -> Tx ChauffPico@HA OK:", message)
+                            log("RXp: ble->Tx ChauffPico@HA: ", message, fonction="F4")
                         else:
-                            print(f"    -> Tx ChauffPico@HA KO !!!")
+                            log("RXp: ble->Tx ChauffPico@HA: KO !!!", fonction="F4")
                     except requests.exceptions.RequestException as e:
-                        print(f"        -> ERREUR: Impossible de contacter Home Assistant ({e})")
+                        log(f"RXp: ble->Tx ChauffPico@HA:ERREUR: Impossible de contacter Home Assistant ({e})", fonction="F4")
 
                 # sur rx messasge, appellera : rx_ble_handle_notification
                 await client.start_notify(TX_CHAR_UUID, rx_ble_handle_notification)
-
-                # async def monitor_inactivity():
-                #     while client.is_connected:
-                #         if time.time()-last_msg_time > INACTIVITY_TIMEOUT:
-                #             print("⏱️ Inactivité détectée. Déconnexion...")
-                #             await client.disconnect()
-                #             break
-                #         await asyncio.sleep(10)
 
                 async def send_loop():
                     while client.is_connected:
@@ -162,7 +154,7 @@ async def run_ble_client(app_ihm):
                                 await client.write_gatt_char(RX_CHAR_UUID, etat_ble["envoyer"].encode())
                                 etat_ble["envoyer"]=None
                             except Exception as e:
-                                print("❌ Erreur d'envoi :", e)
+                                log("❌ Erreur d'envoi :", e, fonction="F3")
                         await asyncio.sleep(10)
 
                 await asyncio.gather(
@@ -171,12 +163,12 @@ async def run_ble_client(app_ihm):
                 )
 
         except asyncio.TimeoutError as e:
-            print(f"❌ Timeout lors de la connexion à {pico.name}: {e}")
-            print("🔁 Tentative de reconnexion dans 4 minutes...")
+            log(f"❌ Timeout lors de la connexion à {pico.name}: {e}", fonction="F3")
+            log("🔁 Tentative de reconnexion dans 4 minutes...", fonction="F3")
 
         except BleakError as e:
-            print(f"❌ Erreur de connexion : {e}")
-            print("🔁 Tentative de reconnexion dans 4 minutes...")
+            log(f"❌ Erreur de connexion : {e}", fonction="F3")
+            log("🔁 Tentative de reconnexion dans 4 minutes...", fonction="F3")
             if etat_ble["connecte"]==True:
                 etat_ble["change"]=True
                 etat_ble["connecte"]=False

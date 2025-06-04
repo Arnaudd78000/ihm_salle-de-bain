@@ -7,10 +7,10 @@ from gpiozero import Button # type: ignore
 import subprocess
 import requests
 import threading
-import time
+# import time
+# from datetime import datetime
 import data_storage
 from variable import etat_ble
-from datetime import datetime
 import globals
 from dotenv import load_dotenv
 
@@ -23,9 +23,9 @@ my_token = os.getenv("HA_TOKEN")
 ## à mettre partout
 #######
 # Redéfinir print partout
-import builtins
+#import builtins
 from logger import log
-builtins.print = log
+#builtins.print = log
 
 # Numéro de la broche GPIO utilisée (BCM)
 IRQ_PIN = 26  # capteur lum
@@ -39,14 +39,14 @@ device_file = device_folder + "/w1_slave"
 def send_1st_frame_to_nodered():
     url = "http://192.168.1.10:1990/nodered/pico_chbre_init"
 
-    print("TX trame Nodered")
+    log("TX trame init vers Nodered", fonction="F0")
 
     try:
         response = requests.get(url)
-        print("Code HTTP tx nodered:", response.status_code)
+        #print("Code HTTP tx nodered:", response.status_code)
         response.close()
     except Exception as e:
-        print("Erreur lors de la requete :", e)
+        log("Erreur lors de la requete init vers nodered :", e, fonction="F0")
 
 ctr=0
 ctr_meteo = 0
@@ -75,16 +75,13 @@ class CAPTEURS:
         # Assurez-vous que la sortie est bien une chaîne de caractères
         wifi_output = result.stdout.decode('utf-8').strip()
 
-        if("Livebox-CBE6" in wifi_output):
-            print("wifi OK")
-            #self.app_ihm.icon_wifi_sdb.config(image=self.app_ihm.icon_wifi_on)
-        else:
+        if("Livebox-CBE6" not in wifi_output):
             self.app_ihm.canvas_sdb.delete(self.app_ihm.icon_wifi_on)
             self.icon_wifi_off_sdb = self.canvas_sdb.create_image(50, 12, image=self.icon_wifi_off)
 
             commande='rfkill block wifi'
             subprocess.run(commande, shell=True, check=True)
-            print("wifi KO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            log("Erreur wifi KO", fonction="F1")
             time.sleep(5)
             commande='rfkill unblock wifi'
             subprocess.run(commande, shell=True, check=True)
@@ -93,14 +90,14 @@ class CAPTEURS:
             result = subprocess.run(commande, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             wifi_output = result.stdout.decode('utf-8').strip()
             if("Livebox-CBE6" in wifi_output):
-                print("wifi OK")
+                log("Wifi OK", fonction="F1")
                 self.app_ihm.canvas_sdb.delete(self.app_ihm.icon_wifi_off)
                 self.icon_wifi_on_sdb = self.canvas_sdb.create_image(50, 12, image=self.icon_wifi_on)     
                 send_1st_frame_to_nodered()
 
 
     def timer_5_ou_30_min(self, app_ihm):
-        print("Timer")
+        log("Timer", fonction="F2")
         etat = self.read_lumiere()
         temp_c = self.read_temp()
         self.tx_trame_SdB_to_HA(temp_c, etat)
@@ -109,9 +106,6 @@ class CAPTEURS:
 
         # Mettre à jour la température de l'IHM
         app_ihm.update_temp_sdb(temp=temp_c)
-
-        if DEBUG:
-            print("Exécution de la fonction toutes les 5 minutes")
 
         if etat=="on":
             threading.Timer(300, self.timer_5_ou_30_min, args=[app_ihm,]).start() # 5min
@@ -125,21 +119,11 @@ class CAPTEURS:
         if etat_ble["change"]==True:
             etat_ble["change"]=False
             if etat_ble["connecte"]==True:
-                print("ble connexion change to : connected")
+                log("ble connexion change to : connected", fonction="F3")
                 self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.icon_wifi_chbre , image=self.app_ihm.icon_wifi_on)
             else:
-                print("ble connexion change to : disconnected")
+                log("ble connexion change to : disconnected", fonction="F3")
                 self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.icon_wifi_chbre , image=self.app_ihm.icon_wifi_off)
-
-        # if etat_ble["rx"]==True:
-        #     etat_ble["rx"]=False
-        #     self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.text_temp_chbre, text=f"{etat_ble['temp']}°C")
-        #     if etat_ble["mode"]=="off_0":
-        #         self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.text_temp_cible_chbre, text="- °C")
-        #         self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.icon_heat_salon , image=self.app_ihm.icon_radiator)
-        #     else:               
-        #         self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.text_temp_cible_chbre, text=f"{etat_ble['temp_cible']}°C")
-        #         self.app_ihm.canvas_chbre.itemconfig(self.app_ihm.icon_heat_chbre , image=self.app_ihm.icon_radiator_red)             
 
         if ctr_meteo==0:
             ctr_meteo=1
@@ -163,7 +147,7 @@ class CAPTEURS:
     def tx_trame_SdB_to_HA(self, temp_c, etat):
         global ctr
 
-        print(datetime.now().strftime("%H:%M") + "-TX: SdB->HA")
+        log("TX: SdB->HA", fonction="F6")
         # Configuration
         HA_URL = "http://192.168.1.10:8123"  # Remplace par l'URL de ton Home Assistant
 
@@ -181,8 +165,7 @@ class CAPTEURS:
         try:
             response = requests.post(f"{HA_URL}/api/states/input_text.msg_from_sdb", json=data, headers=HEADERS)
         except:
-            print(f"ERREUR: Impossible de contacter Home Assistant POUR CAPTEUR LUM ")
-        #print(f"reponse:{response.status_code}")
+            log("ERREUR: Impossible de contacter Home Assistant POUR CAPTEUR LUM ", fonction="F6")
 
     ###############################################
     def on_rising(self):

@@ -4,17 +4,11 @@ from config import DEBUG
 import data_storage
 from ihm_main import IHM  # Importer la classe IHM du fichier ihm.py
 from variable import etat_ble
-from datetime import datetime
 import logging
 import globals
 logging.getLogger('werkzeug').disabled = True  # ← désactive les logs HTTP Flask
-#######
-## à mettre partout
-#######
-# Redéfinir print partout
-import builtins
+
 from logger import log
-builtins.print = log
 import globals
 
 app = Flask(__name__)
@@ -30,7 +24,7 @@ class SERVEUR:
 
    # @app.route('/rx_trame', methods=['GET', 'POST'])
     def recevoir_trame_HA(self):
-        print(datetime.now().strftime("%H:%M") + "-RX: HA->SdB")
+        log("RX: HA->SdB", fonction="F7")
         if request.is_json:
             data = request.get_json()
 
@@ -90,7 +84,7 @@ class SERVEUR:
         # Rempli etat_ble ce qui enverra un msg ble
         toto = f"{presence},{round((float(temp_pre_chauff)-16)*2)},{round((float(temp_chauff)-16)*2)},{globals.mode_debug_pico},{ordre_pre_chauff},{ordre_chauff},{heure},{minute}"
         etat_ble["envoyer"]=toto
-        print(datetime.now().strftime("%H:%M") + f"-RXp: Nodered->SdB=>ble->pico: {toto}")
+        log(f"RXp: Nodered->SdB=>ble->pico: {toto}", fonction="F4")
 
         return "Trame HA reçue", 200      
 

@@ -14,9 +14,9 @@ from customtkinter import CTkImage
 ## à mettre partout
 #######
 # Redéfinir print partout
-import builtins
+#import builtins
 from logger import log
-builtins.print = log
+#builtins.print = log
 import globals
 
 API_KEY = "eb226d2653ed00e8c8952db6777a471b"
@@ -314,7 +314,7 @@ class IHM:
 
     ###############################################
     def on_touch_chbre(self, event):
-        print("Zone canvas chbre touchée !")
+        log("Zone canvas chbre touchée !", fonction="F5")
         if self.mode_ihm != "chbre":
             self.mode_ihm="chbre"
             self.label_icon_alarme.grid_remove()
@@ -374,7 +374,7 @@ class IHM:
         try:
             response = requests.get(url)
         except requests.RequestException as e:
-            print("Erreur lors de la requête pico_chbre:", e)
+            log("Erreur lors de la requête pico_chbre:", e, fonction="F0")
 
     def refresh_icon_chauff(self):
         if globals.mode_chauff_chbre=="off":

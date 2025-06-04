@@ -49,18 +49,25 @@ def init_logger():
     # Format
     formatter = logging.Formatter('%(message)s')
     file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
+    #console_handler.setFormatter(formatter)
 
     # Ajout des handlers
     logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+    #logger.addHandler(console_handler)
 
     return logger
 
-
-# Fonction de remplacement de print
-def log(*args, **kwargs):
+# log et print en meme temps
+def log(*args, fonction=None):
     if logger is None:
         raise RuntimeError("Logger not initialized. Call init_logger() first.")
+    
     message = " ".join(str(arg) for arg in args)
-    logger.info(message)
+    heure = datetime.now().strftime("%H:%M")
+
+    if fonction is None:
+        logger.info(f"Fx: [{heure}] {message}")
+    else:
+        logger.info(f"{fonction}: [{heure}] {message}")
+
+    print(message)
