@@ -54,6 +54,9 @@ def start_async_loop_ble(app_ihm):
 
 async def run_ble_client(app_ihm):
     global etat_ble
+    global last_periodic_send
+    global ble_data_to_tx
+    ble_data_to_tx="dummy"
 
     while True:  # Boucle de reconnexion
         log("🔍 Recherche du PicoBLE...", fonction="F3")
@@ -78,10 +81,13 @@ async def run_ble_client(app_ihm):
 
                 last_msg_time = time.time()
 
-
+                global modetx_old
+                modetx_old="off_0"
+                
                 def rx_ble_handle_notification(_, data):
                     nonlocal last_msg_time 
                     global temp_pico_old
+                    global modetx_old
                     #save time
                     last_msg_time = time.time()
                     message=data.decode()
@@ -97,11 +103,16 @@ async def run_ble_client(app_ihm):
                     temp_pico_old=da
                     temp_cible = valeurs[1]
                     modetx = valeurs[2]
-                    cde_regul = valeurs[3]
+                    defaut = valeurs[3]
                     elapsed_time_regul_minutes = valeurs[4]
 
                     app_ihm.canvas_chbre.itemconfig(app_ihm.text_temp_chbre, text=f"{temp}°C")
-                    if modetx=="off_0":
+                    if modetx=="off_0" or modetx=="off_2":
+                        if modetx != modetx_old:
+                            modetx_old=modetx
+                            app_ihm.label_icon_off.configure(border_width=4)
+                            app_ihm.label_icon_on.configure(border_width=0)
+                            app_ihm.label_icon_boost.configure(border_width=0)
                         app_ihm.canvas_chbre.itemconfig(app_ihm.text_temp_cible_chbre, text="- °C")
                         app_ihm.canvas_chbre.itemconfig(app_ihm.icon_heat_salon , image=app_ihm.icon_radiator)
                     else:               
@@ -120,7 +131,7 @@ async def run_ble_client(app_ihm):
                             "temp": temp,
                             "temp_cible": temp_cible,
                             "mode": modetx,
-                            "regul": cde_regul,
+                            "defaut": defaut,
                             "timeInRegul": elapsed_time_regul_minutes,
                             "unit_of_measurement": "C",  # 👈 Ajout de l'unite pour indiquer que c'est une temperature
                             "device_class": "temperature"  # 👈 Indique que c'est un c
@@ -147,12 +158,38 @@ async def run_ble_client(app_ihm):
                 await client.start_notify(TX_CHAR_UUID, rx_ble_handle_notification)
 
                 async def send_loop():
+                    global last_periodic_send
+                    global ble_data_to_tx
+
                     while client.is_connected:
+
+                        now = time.time()
+                        if ble_data_to_tx != "dummy":
+                            # Envoi périodique toutes les 10 minutes
+                            if now - last_periodic_send >= 600:
+                                try:
+                                    dt = datetime.fromtimestamp(now)
+                                    heure = f"{dt.hour:02d}"
+                                    minute = f"{dt.minute:02d}"
+                                    ma_chaine=ble_data_to_tx+f",{heure},{minute}"
+                                    await client.write_gatt_char(RX_CHAR_UUID, ma_chaine.encode())
+                                    log(f"RXp: ble->pico: {ma_chaine}", fonction="F3")
+                                except Exception as e:
+                                    log("❌ Erreur d'envoi périodique :", e, fonction="F3")
+                                last_periodic_send = now
+
                         if etat_ble["envoyer"]:
+                            ble_data_to_tx = etat_ble["envoyer"]
                             #message = "1" # input(">> Message à envoyer : ")
                             try:
-                                await client.write_gatt_char(RX_CHAR_UUID, etat_ble["envoyer"].encode())
+                                dt = datetime.fromtimestamp(now)
+                                heure = f"{dt.hour:02d}"
+                                minute = f"{dt.minute:02d}"
+                                ma_chaine=ble_data_to_tx+f",{heure},{minute}"
+                                await client.write_gatt_char(RX_CHAR_UUID, ma_chaine.encode())
+                                log(f"RXp: Nodered->SdB=>ble->pico: {ma_chaine}", fonction="F4")
                                 etat_ble["envoyer"]=None
+                                last_periodic_send = now
                             except Exception as e:
                                 log("❌ Erreur d'envoi :", e, fonction="F3")
                         await asyncio.sleep(10)

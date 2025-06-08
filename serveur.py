@@ -78,13 +78,11 @@ class SERVEUR:
 
         self.capteurs.app_ihm.refresh_icon_chauff()
         
-        heure = data.get("heure", "00")
-        minute = data.get("minute", "00")
 
         # Rempli etat_ble ce qui enverra un msg ble
-        toto = f"{presence},{round((float(temp_pre_chauff)-16)*2)},{round((float(temp_chauff)-16)*2)},{globals.mode_debug_pico},{ordre_pre_chauff},{ordre_chauff},{heure},{minute}"
+        toto = f"{presence},{round((float(temp_pre_chauff)-16)*2)},{round((float(temp_chauff)-16)*2)},{globals.mode_debug_pico},{ordre_pre_chauff},{ordre_chauff}"
         etat_ble["envoyer"]=toto
-        log(f"RXp: Nodered->SdB=>ble->pico: {toto}", fonction="F4")
+       
 
         return "Trame HA reçue", 200      
 
